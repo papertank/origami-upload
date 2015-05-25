@@ -28,7 +28,7 @@ class FileUpload {
             return $file->getFilePath();
         }
 
-        if ( $file = $this->getCurrentFile() ) {
+        if ( $file = $this->getCurrentFile($path) ) {
             return $file->getFilePath();
         }
 
@@ -62,7 +62,7 @@ class FileUpload {
         return md5(uniqid(mt_rand())).'.'.strtolower($extension);
     }
 
-    private function getCurrentFile()
+    private function getCurrentFile($path)
     {
         if ( ! $this->request->has($this->name.'.uploaded') ) {
             return false;
@@ -72,9 +72,9 @@ class FileUpload {
             return false;
         }
 
-        $path = $this->request->get($this->name.'.uploaded');
+        $filename = $this->request->input($this->name.'.uploaded');
 
-        return new File($path);
+        return new File($path.'/'.$filename);
     }
 
     private function getDefaultPath()
