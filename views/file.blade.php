@@ -1,4 +1,3 @@
-<input type="file" name="{{ $name }}[file]" />
 @if ( $file && $file->fileExists() )
     <div class="current-file">
         @if ( $file->isImage() )
@@ -13,3 +12,4 @@
     <p class="help-block">Upload a new file below or tick the box above to delete the current file.</p>
     <input type="hidden" name="{{ $name }}[uploaded]" value="{{ $file->getFilename() }}" />
 @endif
+<input type="file" name="{{ $name }}[file]" />
