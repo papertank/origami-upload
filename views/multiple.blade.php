@@ -22,7 +22,7 @@
 		        @else
 		            <span class="filename">{{ $file->getFilename() }}</span>
 		        @endif
-                <input type="hidden" name="{{ $name }}[]" value="{{ $file->getKey() }}" />
+                <input type="hidden" name="{{ $name }}[]" value="{{ $file->getFileKey() }}" />
             </div>
         @endforeach
     @endif

@@ -7,7 +7,7 @@ class File implements FileInterface {
     protected $path;
 
     protected $is_image = null;
-    protected $key = null
+    protected $key = null;
     protected $image = null;
 
     public function __construct($path, $key = null)
