@@ -172,7 +172,7 @@
                         uploader.start();
                     },
                     UploadProgress: function (up, file) {
-                        var percent = file.percent + '%';
+                        var percent = file.percent;
                         $('#' + file.id).find('.progress-bar').css({'width': percent}).html('<span class="sr-only">'+Math.round(percent)+'% Complete</span>');
                     },
                     FileUploaded: function (up, file, info) {
