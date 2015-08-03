@@ -9,7 +9,7 @@
     ],
     "require": {
         "php": ">=5.4.0",
-        "illuminate/support": "~5.0",
+        "illuminate/support": "~5.1",
         "intervention/image": "2.*"
     },
     "autoload": {
@@ -19,8 +19,8 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-master": "1.0-dev"
+            "dev-master": "1.1-dev"
         }
     },
-    "minimum-stability": "dev"
+    "minimum-stability": "stable"
 }

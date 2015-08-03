@@ -7,11 +7,23 @@ class File implements FileInterface {
     protected $path;
 
     protected $is_image = null;
+    protected $key = null
     protected $image = null;
 
-    public function __construct($path, $encrypted = false)
+    public function __construct($path, $key = null)
     {
         $this->path = $path;
+        $this->key = $key;
+    }
+
+    public function setFileKey($key)
+    {
+        $this->key = $key;
+    }
+
+    public function getFileKey()
+    {
+        return $this->key;
     }
 
     public function getPath()

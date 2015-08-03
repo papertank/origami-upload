@@ -21,10 +21,16 @@ class UploadServiceProvider extends ServiceProvider {
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/../public' => public_path('assets/vendor/upload'),
-            __DIR__.'/../config/upload.php' => config_path('upload.php'),
-            __DIR__.'/../views' => base_path('resources/views/vendor/upload'),
-        ]);
+            __DIR__.'/../config/upload.php' => config_path('upload.php')
+        ], 'config');
+
+        $this->publishes([
+            __DIR__.'/../public' => public_path('vendor/upload')
+        ], 'public');
+
+        $this->publishes([
+            __DIR__.'/../views' => base_path('resources/views/vendor/upload')
+        ], 'views');
 
         $this->loadViewsFrom(__DIR__.'/../views', 'upload');
     }

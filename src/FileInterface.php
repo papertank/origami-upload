@@ -2,6 +2,7 @@
 
 interface FileInterface {
 
+    public function getFileKey();
     public function getPath();
     public function getFilePath();
     public function getFilename();

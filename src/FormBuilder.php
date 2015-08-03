@@ -18,6 +18,19 @@ class FormBuilder {
         return view('upload::file', ['name' => $name, 'file' => $file])->render();
     }
 
+    public function multiple($id = null, array $files = [], $name = 'media')
+    {
+        $upload_suffix = ( ! is_null($id) ? '-'.$id : '' );
+
+        if ( $files ) {
+            $files = array_map(function($key, $path){
+                return new File($path, $key);
+            }, array_keys($files), $files);
+        }
+
+        return view('upload::multiple', ['name' => $name, 'files' => $files, 'upload_suffix' => $upload_suffix])->render();
+    }
+
     /**
      * Set the session store implementation.
      *
