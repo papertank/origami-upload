@@ -46,7 +46,7 @@ class UploadServiceProvider extends ServiceProvider {
             __DIR__.'/../config/upload.php', 'upload'
         );
 
-        $this->app->bindShared('upload.form', function($app)
+        $this->app->singleton('upload.form', function($app)
         {
             $form = new FormBuilder();
 
