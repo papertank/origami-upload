@@ -1,7 +1,7 @@
 <?php
 return array(
 
-    'path' => storage_path('app/public'),
+    'path' => 'public',
 
     'max_filesize' => 6, // Mb
 
