@@ -2,78 +2,130 @@
 
 namespace Origami\Upload;
 
+use Illuminate\Http\Request;
+use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManagerStatic as Intervention;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class File {
+class FileUpload {
 
-    protected $path;
+    /**
+     * @var string
+     */
+    protected $name;
 
-    protected $key = null;
-    protected $image = null;
-    protected $disk = null;
+    /**
+     * @var Request
+     */
+    private $request;
 
-    public function __construct($path, $key = null, $disk = null)
+    /**
+     * @var string|null
+     */
+    private $disk = null;
+
+    public function __construct($name, Request $request = null)
     {
-        $this->path = $path;
-        $this->key = $key;
+        $this->name = $name;
+
+        $this->request = is_null($request) ? app('request') : $request;
     }
 
-    public function setFileKey($key)
+    public function process($path = null)
     {
-        $this->key = $key;
-    }
+        if ( is_null($path) ) $path = $this->getDefaultPath();
 
-    public function getFileKey()
-    {
-        return $this->key;
-    }
-
-    public function getPath()
-    {
-        return pathinfo($this->path, PATHINFO_DIRNAME);
-    }
-
-    public function getFilePath()
-    {
-        return $this->path;
-    }
-
-    public function getFilename()
-    {
-        return basename($this->path);
-    }
-
-    public function getFileContents()
-    {
-        return Storage::disk($this->disk)->get($this->getFilePath());
-    }
-
-    public function fileExists()
-    {
-        return Storage::disk($this->disk)->exists($this->getFilePath());
-    }
-
-    public function isImage()
-    {
-        if ($this->image === null) {
-            $mime = finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->getFileContents());
-
-            $this->image = (strpos($mime, 'image') === 0);
+        if ( $file = $this->getUploadedFile($path) ) {
+            return $file->getFilePath();
         }
 
-        return $this->image;
+        if ( $file = $this->getCurrentFile($path) ) {
+            return $file->getFilePath();
+        }
+
+        return null;
     }
 
-    public function getThumbnail($size = 120)
+    public function getDisk()
     {
-        $image = Intervention::make($this->getFilePath());
+        return $this->disk;
+    }
 
-        $format = 'png';
+    public function setDisk($disk)
+    {
+        $this->disk = $disk;
+        return $this;
+    }
 
-        $image->fit($size)->encode($format);
+    private function getUploadedFile($path)
+    {
+        $key = $this->name.'.file';
 
-        return 'data:image/'.$format.';base64,'.base64_encode($image);
+        if ( ! $this->request->hasFile($key) ) {
+            return false;
+        }
+
+        $file = $this->request->file($key);
+
+        if ( ! $file->isValid() ) {
+            return false;
+        }
+
+        $filename = $this->newFilename($file->getClientOriginalExtension());
+
+        $contents = file_get_contents($file->getRealPath());
+
+        if ( $image = $this->orientatedImage($file) ) {
+            $contents = $image;
+        }
+
+        Storage::disk($this->disk)->put($path.'/'.$filename, $contents);
+
+        return new File($path.'/'.$filename);
+    }
+
+    private function orientatedImage(UploadedFile $file)
+    {
+        $mime = $file->getClientMimeType() ?: $file->getMimeType();
+
+        if ( ! $mime OR ! in_array(strtolower($mime), ['image/jpeg', 'image/jpg']) ) {
+            return false;
+        }
+
+        $image = Image::make($file->getRealPath());
+
+        $orientation = $image->exif('Orientation');
+
+        if ( is_null($orientation) ) {
+            return false;
+        }
+
+        return $image->orientate()->encode();
+    }
+
+    private function newFilename($extension)
+    {
+        return md5(uniqid(mt_rand())).'.'.strtolower($extension);
+    }
+
+    private function getCurrentFile($path)
+    {
+        if ( ! $this->request->has($this->name.'.uploaded') ) {
+            return false;
+        }
+
+        if ( $this->request->has($this->name.'.delete') ) {
+            return false;
+        }
+
+        $filename = $this->request->input($this->name.'.uploaded');
+
+        return new File($path.'/'.$filename);
+    }
+
+    private function getDefaultPath()
+    {
+        return config('upload.path');
     }
 
 }
