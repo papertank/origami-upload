@@ -1,4 +1,6 @@
-<?php namespace Origami\Upload;
+<?php 
+
+namespace Origami\Upload;
 
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Http\Response;
@@ -46,14 +48,14 @@ class UploadServiceProvider extends ServiceProvider {
             __DIR__.'/../config/upload.php', 'upload'
         );
 
-        $this->app->singleton('upload.form', function($app)
+        $this->app->singleton('upload.helper', function($app)
         {
-            $form = new FormBuilder();
+            $helper = new UploadHelper();
 
-            return $form->setSessionStore($app['session.store']);
+            return $helper->setSessionStore($app['session.store']);
         });
 
-        $this->app->alias('upload.form', 'Origami\Upload\FormBuilder');
+        $this->app->alias('upload.helper', 'Origami\Upload\UploadHelper');
 
         $loader = AliasLoader::getInstance();
         $loader->alias('Upload', 'Origami\Upload\UploadFacade');
@@ -66,7 +68,7 @@ class UploadServiceProvider extends ServiceProvider {
      */
     public function provides()
     {
-        return ['upload.form'];
+        return ['upload.helper'];
     }
 
 }

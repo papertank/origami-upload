@@ -1,8 +1,11 @@
-<?php namespace Origami\Upload;
+<?php 
+
+namespace Origami\Upload;
 
 use Illuminate\Session\Store as Session;
+use Origami\Upload\FileUpload;
 
-class FormBuilder {
+class UploadHelper {
 
     /**
      * The session store implementation.
@@ -29,6 +32,14 @@ class FormBuilder {
         }
 
         return view('upload::multiple', ['name' => $name, 'files' => $files, 'upload_suffix' => $upload_suffix])->render();
+    }
+
+    public function processFile($name = 'file', $path = null)
+    {
+        $file = new FileUpload($name);
+        $path = $file->process($path);
+
+        return ( ! is_null($path) ? basename($path) : null );
     }
 
     /**
