@@ -2,130 +2,78 @@
 
 namespace Origami\Upload;
 
-use Illuminate\Http\Request;
-use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Intervention\Image\ImageManagerStatic as Intervention;
 
-class FileUpload {
+class File {
 
-    /**
-     * @var string
-     */
-    protected $name;
+    protected $path;
 
-    /**
-     * @var Request
-     */
-    private $request;
+    protected $key = null;
+    protected $image = null;
+    protected $disk = null;
 
-    /**
-     * @var string|null
-     */
-    private $disk = null;
-
-    public function __construct($name, Request $request = null)
+    public function __construct($path, $key = null, $disk = null)
     {
-        $this->name = $name;
-
-        $this->request = is_null($request) ? app('request') : $request;
+        $this->path = $path;
+        $this->key = $key;
     }
 
-    public function process($path = null)
+    public function setFileKey($key)
     {
-        if ( is_null($path) ) $path = $this->getDefaultPath();
-
-        if ( $file = $this->getUploadedFile($path) ) {
-            return $file->getFilePath();
-        }
-
-        if ( $file = $this->getCurrentFile($path) ) {
-            return $file->getFilePath();
-        }
-
-        return null;
+        $this->key = $key;
     }
 
-    public function getDisk()
+    public function getFileKey()
     {
-        return $this->disk;
+        return $this->key;
     }
 
-    public function setDisk($disk)
+    public function getPath()
     {
-        $this->disk = $disk;
-        return $this;
+        return pathinfo($this->path, PATHINFO_DIRNAME);
     }
 
-    private function getUploadedFile($path)
+    public function getFilePath()
     {
-        $key = $this->name.'.file';
-
-        if ( ! $this->request->hasFile($key) ) {
-            return false;
-        }
-
-        $file = $this->request->file($key);
-
-        if ( ! $file->isValid() ) {
-            return false;
-        }
-
-        $filename = $this->newFilename($file->getClientOriginalExtension());
-
-        $contents = file_get_contents($file->getRealPath());
-
-        if ( $image = $this->orientatedImage($file) ) {
-            $contents = $image;
-        }
-
-        Storage::disk($this->disk)->put($path.'/'.$filename, $contents);
-
-        return new File($path.'/'.$filename);
+        return $this->path;
     }
 
-    private function orientatedImage(UploadedFile $file)
+    public function getFilename()
     {
-        $mime = $file->getClientMimeType() ?: $file->getMimeType();
-
-        if ( ! $mime OR ! in_array(strtolower($mime), ['image/jpeg', 'image/jpg']) ) {
-            return false;
-        }
-
-        $image = Image::make($file->getRealPath());
-
-        $orientation = $image->exif('Orientation');
-
-        if ( is_null($orientation) ) {
-            return false;
-        }
-
-        return $image->orientate()->encode();
+        return basename($this->path);
     }
 
-    private function newFilename($extension)
+    public function getFileContents()
     {
-        return md5(uniqid(mt_rand())).'.'.strtolower($extension);
+        return Storage::disk($this->disk)->get($this->getFilePath());
     }
 
-    private function getCurrentFile($path)
+    public function fileExists()
     {
-        if ( ! $this->request->has($this->name.'.uploaded') ) {
-            return false;
-        }
-
-        if ( $this->request->has($this->name.'.delete') ) {
-            return false;
-        }
-
-        $filename = $this->request->input($this->name.'.uploaded');
-
-        return new File($path.'/'.$filename);
+        return Storage::disk($this->disk)->exists($this->getFilePath());
     }
 
-    private function getDefaultPath()
+    public function isImage()
     {
-        return config('upload.path');
+        if ($this->image === null) {
+            $mime = finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->getFileContents());
+
+            $this->image = (strpos($mime, 'image') === 0);
+        }
+
+        return $this->image;
+    }
+
+    public function getThumbnail($size = 120)
+    {
+        $image = Intervention::make($this->getFilePath());
+
+        $format = 'png';
+
+        $image->fit($size)->encode($format);
+
+        return 'data:image/'.$format.';base64,'.base64_encode($image);
     }
 
 }
