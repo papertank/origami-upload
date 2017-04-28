@@ -5,7 +5,7 @@ namespace Origami\Upload;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Intervention;
 
-class File implements FileInterface {
+class File {
 
     protected $path;
 
