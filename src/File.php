@@ -1,16 +1,19 @@
-<?php namespace Origami\Upload;
+<?php 
 
+namespace Origami\Upload;
+
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Intervention;
 
 class File implements FileInterface {
 
     protected $path;
 
-    protected $is_image = null;
     protected $key = null;
     protected $image = null;
+    protected $disk = null;
 
-    public function __construct($path, $key = null)
+    public function __construct($path, $key = null, $disk = null)
     {
         $this->path = $path;
         $this->key = $key;
@@ -41,24 +44,25 @@ class File implements FileInterface {
         return basename($this->path);
     }
 
+    public function getFileContents()
+    {
+        return Storage::disk($this->disk)->get($this->getFilePath());
+    }
+
     public function fileExists()
     {
-        return file_exists($this->getFilePath());
+        return Storage::disk($this->disk)->exists($this->getFilePath());
     }
 
     public function isImage()
     {
-        if ( $this->is_image === null ) {
+        if ($this->image === null) {
+            $mime = finfo_buffer(finfo_open(FILEINFO_MIME_TYPE), $this->getFileContents());
 
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $this->getFilePath());
-            finfo_close($finfo);
-
-            $this->is_image = ( strpos($mime, 'image') === 0 );
-
+            $this->image = (strpos($mime, 'image') === 0);
         }
 
-        return $this->is_image;
+        return $this->image;
     }
 
     public function getThumbnail($size = 120)

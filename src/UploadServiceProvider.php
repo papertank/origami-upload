@@ -66,7 +66,7 @@ class UploadServiceProvider extends ServiceProvider {
      */
     public function provides()
     {
-        return array('upload.form');
+        return ['upload.form'];
     }
 
 }

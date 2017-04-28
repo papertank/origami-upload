@@ -1,6 +1,11 @@
-<?php namespace Origami\Upload;
+<?php 
+
+namespace Origami\Upload;
 
 use Illuminate\Http\Request;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileUpload {
 
@@ -14,9 +19,15 @@ class FileUpload {
      */
     private $request;
 
+    /**
+     * @var string|null
+     */
+    private $disk = null;
+
     public function __construct($name, Request $request = null)
     {
         $this->name = $name;
+
         $this->request = is_null($request) ? app('request') : $request;
     }
 
@@ -35,6 +46,16 @@ class FileUpload {
         return null;
     }
 
+    public function getDisk()
+    {
+        return $this->disk;
+    }
+
+    public function setDisk($disk)
+    {
+        $this->disk = $disk;
+        return $this;
+    }
 
     private function getUploadedFile($path)
     {
@@ -52,9 +73,34 @@ class FileUpload {
 
         $filename = $this->newFilename($file->getClientOriginalExtension());
 
-        $file->move($path, $filename);
+        $contents = file_get_contents($file->getRealPath());
+
+        if ( $image = $this->orientatedImage($file) ) {
+            $contents = $image;
+        }
+
+        Storage::disk($this->disk)->put($path.'/'.$filename, $contents);
 
         return new File($path.'/'.$filename);
+    }
+
+    private function orientatedImage(UploadedFile $file)
+    {
+        $mime = $file->getClientMimeType() ?: $file->getMimeType();
+
+        if ( ! $mime OR ! in_array(strtolower($mime), ['image/jpeg', 'image/jpg']) ) {
+            return false;
+        }
+
+        $image = Image::make($file->getRealPath());
+
+        $orientation = $image->exif('Orientation');
+
+        if ( is_null($orientation) ) {
+            return false;
+        }
+
+        return $image->orientate()->encode();
     }
 
     private function newFilename($extension)
