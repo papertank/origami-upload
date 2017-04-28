@@ -3,8 +3,8 @@
 namespace Origami\Upload;
 
 use Illuminate\Http\Request;
-use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManagerStatic as Image;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class FileUpload {
