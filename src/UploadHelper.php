@@ -34,10 +34,10 @@ class UploadHelper {
         return view('upload::multiple', ['name' => $name, 'files' => $files, 'upload_suffix' => $upload_suffix])->render();
     }
 
-    public function processFile($name = 'file', $path = null)
+    public function processFile($name = 'file', $path = null, $current = null)
     {
         $file = new FileUpload($name);
-        $path = $file->process($path);
+        $path = $file->process($path, $current);
 
         return ( ! is_null($path) ? basename($path) : null );
     }
