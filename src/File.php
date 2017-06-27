@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Origami\Upload;
 
@@ -67,7 +67,7 @@ class File {
 
     public function getThumbnail($size = 120)
     {
-        $image = Intervention::make($this->getFilePath());
+        $image = Intervention::make($this->getFileContents());
 
         $format = 'png';
 

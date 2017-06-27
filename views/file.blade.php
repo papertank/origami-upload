@@ -5,9 +5,11 @@
         @else
             <p class="current-file-name">{{ $file->getFilename() }}</p>
         @endif
-        <label class="checkbox">
-            <input type="checkbox" name="{{ $name }}[delete]" value="true" /> Delete {{ $name }}
-        </label>
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" name="{{ $name }}[delete]" value="true" /> Delete {{ $name }}
+            </label>
+        </div>
     </div>
     <p class="help-block">Upload a new file below or tick the box above to delete the current file.</p>
     <input type="hidden" name="{{ $name }}[uploaded]" value="{{ $file->getFilename() }}" />
