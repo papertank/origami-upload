@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Origami\Upload;
 
@@ -17,17 +17,16 @@ class FileUpload {
     /**
      * @var Request
      */
-    private $request;
+    protected $request;
 
     /**
      * @var string|null
      */
-    private $disk = null;
+    protected $disk = null;
 
     public function __construct($name, Request $request = null)
     {
         $this->name = $name;
-
         $this->request = is_null($request) ? app('request') : $request;
     }
 
@@ -57,7 +56,7 @@ class FileUpload {
         return $this;
     }
 
-    private function getUploadedFile($path)
+    protected function getUploadedFile($path)
     {
         $key = $this->name.'.file';
 
@@ -84,7 +83,7 @@ class FileUpload {
         return new File($path.'/'.$filename);
     }
 
-    private function orientatedImage(UploadedFile $file)
+    protected function orientatedImage(UploadedFile $file)
     {
         $mime = $file->getClientMimeType() ?: $file->getMimeType();
 
@@ -103,12 +102,12 @@ class FileUpload {
         return $image->orientate()->encode();
     }
 
-    private function newFilename($extension)
+    protected function newFilename($extension)
     {
         return md5(uniqid(mt_rand())).'.'.strtolower($extension);
     }
 
-    private function getCurrentFile($path, $current = null)
+    protected function getCurrentFile($path, $current = null)
     {
         if ( $this->request->has($this->name.'.delete') ) {
             return false;
@@ -123,7 +122,7 @@ class FileUpload {
         return new File($path.'/'.$filename);
     }
 
-    private function getDefaultPath()
+    protected function getDefaultPath()
     {
         return config('upload.path');
     }
