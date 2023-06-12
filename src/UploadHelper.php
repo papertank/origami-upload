@@ -1,58 +1,58 @@
-<?php 
+<?php
 
 namespace Origami\Upload;
 
-use Illuminate\Session\Store as Session;
-use Origami\Upload\FileUpload;
+use Exception;
+use Spatie\MediaLibrary\Conversions\ImageGenerators\Image;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class UploadHelper {
 
-    /**
-     * The session store implementation.
-     *
-     * @var \Illuminate\Session\Store
-     */
-    protected $session;
+    protected $disk = 'public';
 
-    public function file($name = 'file', $path = null)
+    public function setDefaultDisk($disk)
     {
-        $file = ( ! is_null($path) ? new File($path) : null );
-
-        return view('upload::file', ['name' => $name, 'file' => $file])->render();
+        $this->disk = $disk;
+        return $this;
     }
 
-    public function multiple($id = null, array $files = [], $name = 'media')
+    public function formFile($name = 'file', $current = null, $disk = null)
     {
-        $upload_suffix = ( ! is_null($id) ? '-'.$id : '' );
+        return view('upload::file', ['name' => $name, 'current' => $current, 'disk' => null])->render();
+    }
 
-        if ( $files ) {
-            $files = array_map(function($key, $path){
-                return new File($path, $key);
-            }, array_keys($files), $files);
+    public function formMediaFile($name = 'file', Media $current = null)
+    {
+        if ( ! class_exists(Media::class) ) {
+            throw new Exception('spatie/laravel-medialibrary package is missing');
         }
 
-        return view('upload::multiple', ['name' => $name, 'files' => $files, 'upload_suffix' => $upload_suffix])->render();
+        $canRenderAsImage = $current ? (new Image())->canHandleMime($current->mime_type) : false;
+        return view('upload::media-file', ['name' => $name, 'current' => $current, 'canRenderAsImage' => $canRenderAsImage])->render();
     }
 
-    public function processFile($name = 'file', $path = null, $current = null)
+    public function processFileUpload($name = 'file', $current = null, $directory = null, $disk = null)
     {
         $file = new FileUpload($name);
-        $path = $file->process($path, $current);
 
-        return ( ! is_null($path) ? basename($path) : null );
+        if ( $disk || $this->disk ) {
+            $file->setDisk($disk ?: $this->disk);
+        }
+
+        return $file->process($directory, $current);
     }
 
-    /**
-     * Set the session store implementation.
-     *
-     * @param  \Illuminate\Session\Store  $session
-     * @return $this
-     */
-    public function setSessionStore(Session $session)
+    public function processMediaUpload($name, HasMedia $model, $collection = null)
     {
-        $this->session = $session;
+        if ( ! class_exists(Media::class) ) {
+            throw new Exception('spatie/laravel-medialibrary package is missing');
+        }
 
-        return $this;
+        $file = new MediaUpload($name, $model, $collection);
+        $media = $file->process();
+
+        return $media ?: null;
     }
 
 }

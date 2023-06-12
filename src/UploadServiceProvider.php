@@ -1,19 +1,10 @@
-<?php 
+<?php
 
 namespace Origami\Upload;
 
-use Illuminate\Foundation\AliasLoader;
-use Illuminate\Http\Response;
 use Illuminate\Support\ServiceProvider;
 
 class UploadServiceProvider extends ServiceProvider {
-
-    /**
-     * Indicates if loading of the provider is deferred.
-     *
-     * @var bool
-     */
-    protected $defer = false;
 
     /**
      * Bootstrap the application events.
@@ -22,14 +13,6 @@ class UploadServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
-        $this->publishes([
-            __DIR__.'/../config/upload.php' => config_path('upload.php')
-        ], 'config');
-
-        $this->publishes([
-            __DIR__.'/../public' => public_path('vendor/upload')
-        ], 'public');
-
         $this->publishes([
             __DIR__.'/../views' => base_path('resources/views/vendor/upload')
         ], 'views');
@@ -45,20 +28,15 @@ class UploadServiceProvider extends ServiceProvider {
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__.'/../config/upload.php', 'upload'
+            __DIR__.'/../config/upload.php',
+            'upload'
         );
 
-        $this->app->singleton('upload.helper', function($app)
-        {
-            $helper = new UploadHelper();
-
-            return $helper->setSessionStore($app['session.store']);
+        $this->app->singleton(UploadHelper::class, function($app) {
+            return new UploadHelper;
         });
 
-        $this->app->alias('upload.helper', 'Origami\Upload\UploadHelper');
-
-        $loader = AliasLoader::getInstance();
-        $loader->alias('Upload', 'Origami\Upload\UploadFacade');
+        $this->app->alias(UploadHelper::class, 'origami-upload.helper');
     }
 
     /**
@@ -68,7 +46,7 @@ class UploadServiceProvider extends ServiceProvider {
      */
     public function provides()
     {
-        return ['upload.helper'];
+        return ['origami-upload.helper'];
     }
 
 }

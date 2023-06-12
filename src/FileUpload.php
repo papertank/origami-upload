@@ -30,19 +30,19 @@ class FileUpload {
         $this->request = is_null($request) ? app('request') : $request;
     }
 
-    public function process($path = null, $current = null)
+    public function process($directory = null, $current = null)
     {
-        if ( is_null($path) ) $path = $this->getDefaultPath();
+        $path = $this->getUploadedFile($directory);
 
-        if ( $file = $this->getUploadedFile($path) ) {
-            return $file->getFilePath();
+        if ( ! $path ) {
+            $path = $this->getCurrentFile($current);
         }
 
-        if ( $file = $this->getCurrentFile($path, $current) ) {
-            return $file->getFilePath();
+        if ( $current && ( $path != $current ) ) {
+            Storage::disk($this->disk)->delete($current);
         }
 
-        return null;
+        return $path;
     }
 
     public function getDisk()
@@ -70,61 +70,16 @@ class FileUpload {
             return false;
         }
 
-        $filename = $this->newFilename($file->getClientOriginalExtension());
-
-        $contents = file_get_contents($file->getRealPath());
-
-        if ( $image = $this->orientatedImage($file) ) {
-            $contents = $image;
-        }
-
-        Storage::disk($this->disk)->put($path.'/'.$filename, $contents);
-
-        return new File($path.'/'.$filename);
+        return Storage::disk($this->disk)->putFile($path, $this->request->file($key));
     }
 
-    protected function orientatedImage(UploadedFile $file)
-    {
-        $mime = $file->getClientMimeType() ?: $file->getMimeType();
-
-        if ( ! $mime OR ! in_array(strtolower($mime), ['image/jpeg', 'image/jpg']) ) {
-            return false;
-        }
-
-        $image = Image::make($file->getRealPath());
-
-        $orientation = $image->exif('Orientation');
-
-        if ( is_null($orientation) ) {
-            return false;
-        }
-
-        return $image->orientate()->encode();
-    }
-
-    protected function newFilename($extension)
-    {
-        return md5(uniqid(mt_rand())).'.'.strtolower($extension);
-    }
-
-    protected function getCurrentFile($path, $current = null)
+    protected function getCurrentFile($current = null)
     {
         if ( $this->request->has($this->name.'.delete') ) {
             return false;
         }
 
-        if ( ! $current && ! $this->request->has($this->name.'.uploaded') ) {
-            return false;
-        }
-
-        $filename = $current ?: $this->request->input($this->name.'.uploaded');
-
-        return new File($path.'/'.$filename);
-    }
-
-    protected function getDefaultPath()
-    {
-        return config('upload.path');
+        return $current;
     }
 
 }

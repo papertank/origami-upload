@@ -1,9 +1,9 @@
-@if ( $file && $file->fileExists() )
+@if ( $current )
     <div class="current-file">
-        @if ( $file->isImage() )
-            <img src="{{ $file->getThumbnail() }}" />
+        @if ( \Illuminate\Support\Str::endsWith($current, ['jpg','jpeg','png','gif']) )
+            <img src="{{ \Illuminate\Support\Facades\Storage::disk($disk)->url($current) }}" />
         @else
-            <p class="current-file-name">{{ $file->getFilename() }}</p>
+            <p class="current-file-name">{{ $current }}</p>
         @endif
         <div class="checkbox">
             <label>
@@ -12,6 +12,6 @@
         </div>
     </div>
     <p class="help-block">Upload a new file below or tick the box above to delete the current file.</p>
-    <input type="hidden" name="{{ $name }}[uploaded]" value="{{ $file->getFilename() }}" />
+    <input type="hidden" name="{{ $name }}[uploaded]" value="{{ $current }}" />
 @endif
 <input type="file" name="{{ $name }}[file]" />
